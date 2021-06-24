@@ -1,8 +1,11 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require 'pathname'
 require 'json'
 require 'date'
+require 'whois-parser'
+require_relative 'lib/whois_data'
 
 remote_address_count = Hash.new
 all_entries = 0
@@ -43,15 +46,20 @@ puts "Empty entries: #{empty_entries}"
 puts "Unique remote IP addresses: #{remote_address_count.size}\n\n"
 
 remote_address_count = remote_address_count.sort_by{ |k,v| v["count"] }.reverse.to_h
-remote_address_count.to_h.each_pair do |k,v| 
-    puts "IP address #{k} had #{v["count"]} requests with #{v["timestamps"].count} uniq timestamps in the seconds range.\nThe first request was at #{DateTime.parse(v["timestamps"].first).strftime('%d.%m.%Y %H:%M:%S UTC %z')} and the last at #{DateTime.parse(v["timestamps"].last).strftime('%d.%m.%Y %H:%M:%S UTC %z')}.\n\n"
+remote_address_count.to_h.each_pair do |k,v|
+    whois_data_client = WhoisData.new(ip_address: k)
+    whois_data = whois_data_client.get_whois_data
+    #puts v['timestamps']
+    puts "IP address #{k} had #{v["count"]} requests with #{v["timestamps"].count} uniq timestamps in the seconds range.\nThe first request was at #{DateTime.parse(v["timestamps"].first).strftime('%d.%m.%Y %H:%M:%S')} and the last at #{DateTime.parse(v["timestamps"].last).strftime('%d.%m.%Y %H:%M:%S')}."
+    puts "   Whois Data:"
+    puts "\tinetnum: #{whois_data["inetnum"]}"
+    puts "\tnetrange: #{whois_data["netrange"]}"
+    puts "\tNetName: #{whois_data["netname"]}"
+    puts "\tdescr: #{whois_data["descr"]}"
+    puts "\tOrgName: #{whois_data["orgname"]}"
+    puts "\tCountry: #{whois_data["country"]}"
+    puts
     entries += v["count"]
 end
 
 puts "\nCheck: #{all_entries} == #{entries + empty_entries}"
-
-
-
-
-
-
